@@ -1,47 +1,857 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GAFIS | Gamified Financial Literacy</title>
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GAFIS - Financial Simulation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- CUSTOM CSS STYLES --- */
+        body {
+            font-family: "Poppins", sans-serif;
+            background: radial-gradient(circle at top, #0b1d3a, #061024 80%);
+            color: #f0f4ff;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Navigation Bar Styling */
+        nav {
+            background-color: #040d1a;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: center;
+            border-bottom: 1px solid #00aaff50;
+        }
+
+        nav a {
+            color: #00ffcc;
+            margin: 0 1.5rem;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        nav a:hover {
+            color: #00aaff;
+            text-shadow: 0 0 5px rgba(0, 255, 204, 0.5);
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 5rem 2rem;
+            width: 100%;
+        }
+
+        /* Animated GAFIS Header */
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #ffcc00; 
+            text-shadow: 0 0 10px rgba(255, 204, 0, 0.7); 
+            animation: pulse 3s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); filter: brightness(100%); }
+            50% { transform: scale(1.03); filter: brightness(120%); }
+            100% { transform: scale(1); filter: brightness(100%); }
+        }
+
+        /* Gradient H2 Header */
+        h2 {
+            font-size: 1.6rem;
+            font-weight: 500;
+            margin-bottom: 1.5rem;
+            background: -webkit-linear-gradient(90deg, #00ffcc, #00aaff); 
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent; 
+            text-shadow: 0 0 5px rgba(0, 255, 204, 0.5); 
+        }
+
+        /* Buttons */
+        button, .btn {
+            background: linear-gradient(90deg, #00ffcc, #00aaff);
+            border: none;
+            padding: 0.9rem 1.8rem;
+            margin: 0.5rem;
+            border-radius: 12px;
+            color: #041423;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 170, 255, 0.3);
+            display: flex; /* Added for icon centering */
+            align-items: center;
+            justify-content: center;
+        }
+
+        button:hover, .btn:hover {
+            transform: scale(1.05);
+            background: linear-gradient(90deg, #00aaff, #00ffcc);
+            box-shadow: 0 6px 20px rgba(0, 170, 255, 0.5);
+        }
+
+        .tips {
+            background: rgba(16, 37, 66, 0.7); /* Darker blue background */
+            border: 1px solid #00ffcc50;
+            border-radius: 10px;
+            padding: 2rem;
+            margin-top: 3rem;
+            width: 100%;
+            max-width: 500px;
+            text-align: left;
+            box-shadow: 0 0 20px rgba(0, 255, 204, 0.1);
+        }
+
+        /* Adjusted H3 for the new Tip layout */
+        .tips h3 {
+            font-size: 1.5rem;
+            color: #ffcc00;
+            /* Removed bottom padding/border as it's now a flex row */
+        }
+        
+        .metric-label {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 2rem;
+            padding: 0.5rem 1rem;
+            border: 2px solid #00ffcc;
+            border-radius: 8px;
+            color: #00ffcc; 
+            text-shadow: 0 0 8px rgba(0, 255, 204, 0.7);
+            animation: pulse-border 2s infinite alternate; 
+        }
+
+        @keyframes pulse-border {
+            0% { border-color: #00ffcc; box-shadow: 0 0 5px #00ffcc; }
+            100% { border-color: #00aaff; box-shadow: 0 0 15px #00aaff; }
+        }
+
+        .hidden { display: none !important; }
+        footer { text-align: center; padding: 1.5rem; font-size: 0.9rem; color: #9bb0cc; }
+        
+        .game-data-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            width: 100%;
+            max-width: 900px;
+            margin-top: 2rem;
+        }
+        .data-card {
+            padding: 1rem;
+            background: #102542;
+            border-radius: 10px;
+            border: 1px solid #00aaff50;
+        }
+        .data-card p { margin: 0; }
+        .data-card .value { font-size: 1.5rem; font-weight: 700; color: #00ffcc; }
+        .data-card .label { font-size: 0.9rem; color: #9bb0cc; }
+        
+        .about-content {
+            background: rgba(16, 37, 66, 0.7);
+            border: 1px solid #ffcc0050;
+            border-radius: 10px;
+            padding: 2rem;
+            margin-top: 3rem;
+            width: 100%;
+            max-width: 800px;
+            text-align: left;
+            box-shadow: 0 0 20px rgba(255, 204, 0, 0.1);
+        }
+        .about-content p {
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+        .about-content h3 {
+            color: #00ffcc;
+            font-weight: 600;
+            margin-top: 1.5rem;
+            border-bottom: 1px solid #00aaff50;
+            padding-bottom: 0.5rem;
+            font-size: 1.4rem;
+        }
+        
+        .popup-warning {
+            background: #4a0404;
+            color: #ffdddd;
+            border: 2px solid #ff3b3b;
+            padding: 1rem;
+            margin-top: 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 0 15px rgba(255, 59, 59, 0.5);
+        }
+
+    </style>
 </head>
 <body>
-  <nav>
-    <h1>GAFIS</h1>
-    <ul>
-      <li><a href="index.html">Home</a></li>
-      <li><a href="game.html">Play</a></li>
-      <li><a href="about.html">About</a></li>
-    </ul>
-  </nav>
+    <nav>
+        <a id="nav-home-link" href="#">Home</a>
+        <a id="nav-play-link" href="#">Play</a>
+        <a id="nav-about-link" href="#">About</a>
+    </nav>
+    <main>
+        <!-- Welcome/Login Screen -->
+        <section id="welcome-screen">
+            <h1>WELCOME TO GAFIS 🎮💰</h1>
+            <h2>Learn Finance the Fun Way 💰</h2>
+            <p class="text-xl text-gray-300">Make smart money decisions through interactive challenges.</p>
+            
+            <div id="popup-warning" class="popup-warning hidden">
+                ⚠️ **Sign-In Blocked!** Please check your browser's address bar and **allow pop-ups** for this site, then try clicking the button again.
+            </div>
 
-  <h2 id="welcome-message">Welcome to GAFIS 🎮</h2>
+            <!-- Email input row (hidden unless runtime config missing) -->
+            <div id="email-input-row" class="hidden mt-4 w-full max-w-md mx-auto">
+                <label for="email-input" class="sr-only">Email for test identification</label>
+                <div class="flex">
+                    <input id="email-input" type="email" placeholder="Enter email to identify yourself (optional)" class="flex-1 p-2 rounded-l-md text-black" />
+                    <button id="use-email-button" class="btn rounded-r-md">Use Email</button>
+                </div>
+                <p class="text-xs text-gray-400 mt-2">Providing an email here will derive a deterministic ID locally (not sent anywhere unless Firebase is configured).</p>
+            </div>
+
+            <div class="mt-8 flex flex-wrap justify-center space-x-4">
+                <!-- Buttons link to existing JS logic using their IDs -->
+                <button id="play-now-button">
+                    🎯 Play Now (No Save)
+                </button>
+                <button id="login-button">
+                    <!-- Google Icon SVG (48x48) -->
+                    <svg xmlns="http://www.w3.org/2000/svg" class="inline-block h-5 w-5 mr-2" viewBox="0 0 48 48">
+                        <path fill="#FFC107" d="M43.611 20.083H42V20h-4v2.083h-.066c-.692-2.18-1.92-4.04-3.568-5.385l2.427-2.427c3.344 3.12 5.513 7.373 5.513 12.115s-2.169 8.995-5.513 12.115l-2.427-2.427c1.648-1.345 2.876-3.205 3.568-5.385H42V28h1.611c.21-.692.387-1.4.524-2.117h-2.135V20.083z"/>
+                        <path fill="#4CAF50" d="M30 44c4.872 0 9.273-1.907 12.571-5l-2.427-2.427c-2.07 1.574-4.636 2.527-7.144 2.527s-5.074-.953-7.144-2.527l-2.427 2.427c3.298 3.093 7.7 5 12.571 5z"/>
+                        <path fill="#1976D2" d="M30 4h-4v2.083h.066c-.692 2.18-1.92 4.04-3.568 5.385l2.427 2.427c3.344-3.12 5.513-7.373 5.513-12.115s-2.169-8.995-5.513-12.115l-2.427 2.427c1.648 1.345 2.876 3.205 3.568 5.385H30V4z"/>
+                        <path fill="#F44336" d="M30 4c-4.872 0-9.273 1.907-12.571 5l2.427 2.427c2.07-1.574 4.636-2.527 7.144-2.527s5.074-.953 7.144 2.527l2.427-2.427C39.273 5.907 34.872 4 30 4z"/>
+                        <path fill="#2E7D32" d="M24 16h-4v2.083h-.066c-.692 2.18-1.92 4.04-3.568 5.385l2.427 2.427c3.344-3.12 5.513-7.373 5.513-12.115s-2.169-8.995-5.513-12.115l-2.427 2.427c1.648 1.345 2.876 3.205 3.568 5.385H24V16z"/>
+                    </svg>
+                    Sign in with Google (Saves Progress)
+                </button>
+            </div>
+            
+            <p id="auth-status" class="mt-4 text-sm text-yellow-400">Authenticating...</p>
+            <p style="margin-top: 2rem;" class="text-gray-400">GAFIS: Where money meets mindset ⚡</p>
+
+            <section class="tips">
+                <div class="flex justify-between items-center mb-2 border-b border-gray-600 pb-2">
+                    <h3 class="!mb-0">💡 GAFIS Tip of the Day</h3>
+                    <button id="refresh-tip-button" class="bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-sm py-1 px-3 rounded-lg transition duration-150 shadow-md">
+                        🔄 Refresh
+                    </button>
+                </div>
+                <p id="current-tip" class="text-sm mt-2">
+                    <!-- Tip will be injected here by JS -->
+                </p>
+            </section>
+        </section>
+
+        <!-- Main Game Screen (Initially Hidden) -->
+        <section id="game-screen" class="hidden w-full max-w-4xl p-6">
+            <h1 class="mb-4">GAFIS Financial Simulation</h1>
+            
+            <!-- Key Status -->
+            <div class="metric-label mb-8">
+                <p id="month-display" class="text-white text-3xl font-mono">Month: 1</p>
+                <p id="user-display" class="text-sm text-gray-400 mt-2"></p>
+            </div>
+
+            <!-- Financial Metrics Grid -->
+            <div class="game-data-grid">
+                <!-- 1. Cash Balance -->
+                <div class="data-card">
+                    <p class="label">Cash Balance</p>
+                    <p id="balance-display" class="value text-green-400">$1,000</p>
+                </div>
+                <!-- 2. Savings -->
+                <div class="data-card">
+                    <p class="label">Savings Account</p>
+                    <p id="savings-display" class="value text-blue-400">$0</p>
+                </div>
+                <!-- 3. Total Investments -->
+                <div class="data-card">
+                    <p class="label">Total Investments</p>
+                    <p id="investments-display" class="value text-yellow-400">$0</p>
+                </div>
+                <!-- 4. Monthly Income -->
+                <div class="data-card">
+                    <p class="label">Monthly Income</p>
+                    <p id="income-display" class="value text-green-300">$2,500</p>
+                </div>
+                <!-- 5. Monthly Expenses -->
+                <div class="data-card">
+                    <p class="label">Monthly Expenses (Rent+Groceries)</p>
+                    <p id="expenses-display" class="value text-red-300">-$1,600</p>
+                </div>
+                <!-- 6. Loan Debt -->
+                <div class="data-card">
+                    <p class="label">Loan Debt (5% APR)</p>
+                    <p id="debt-display" class="value text-red-500">-$5,000</p>
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <h2 class="mt-8 mb-4">Current Month Actions</h2>
+            <div id="choices" class="flex flex-wrap justify-center space-x-4">
+                <button onclick="handleAction('Groceries')">Buy Groceries (-$400)</button>
+                <button onclick="handleAction('Save')">Transfer to Savings (-$500)</button>
+                <button onclick="handleAction('Invest')">Invest in Stocks (-$500)</button>
+                <button onclick="handleAction('PayDebt')">Pay Down Loan (-$500)</button>
+            </div>
+            
+            <h2 class="mt-8 mb-4">Advance Simulation</h2>
+            <button onclick="handleAction('NextMonth')" class="bg-indigo-600 hover:bg-indigo-500">
+                Advance Month & Process Finances
+            </button>
+
+            <p id="message" class="mt-8 text-lg text-red-300"></p>
+
+            <!-- Game Over Modal (Hidden by default) -->
+            <div id="game-over-modal" class="hidden fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center p-4 z-50">
+                <div class="bg-red-900 border-2 border-red-500 p-8 rounded-lg shadow-2xl text-center">
+                    <h2 class="text-4xl font-bold mb-4 text-yellow-300">GAME OVER</h2>
+                    <p id="game-over-reason" class="text-xl text-white mb-6">You failed to cover mandatory expenses this month.</p>
+                    <button onclick="handleAction('Reset')" class="bg-yellow-500 hover:bg-yellow-400 text-black">Start New Game</button>
+                </div>
+            </div>
+        </section>
+        
+        <!-- About Screen (Initially Hidden) -->
+        <section id="about-screen" class="hidden w-full max-w-4xl p-6">
+            <h1 class="mb-4">About GAFIS 📚</h1>
+            <h2>The Gamified Financial Simulation</h2>
+
+            <div class="about-content">
+                <p>GAFIS (Gamified Financial Simulation) is designed to help you practice real-world personal finance decisions in a risk-free environment. By managing your income, expenses, savings, investments, and debt month-to-month, you gain practical experience on how financial choices impact your long-term wealth.</p>
+
+                <h3>How it Works</h3>
+                <p>You start with a basic financial profile. Each month, you must decide how to allocate your disposable income. Actions like **saving** and **investing** help you grow your net worth, while managing **debt** is crucial for minimizing interest payments. Be careful, as failing to cover your fixed expenses (like rent) will result in a **Game Over!**</p>
+                
+                <h3>Goal</h3>
+                <p>The primary goal is to maximize your total net worth (Cash + Savings + Investments - Debt) over the longest period possible, while also achieving key financial milestones like paying off your loan or building a robust emergency fund.</p>
+
+                <h3>Data Persistence</h3>
+                <p class="text-sm text-gray-400 mt-4">Your game progress is securely saved using Google Firestore, tied to your unique user ID. This allows you to pick up exactly where you left off, even if you close the browser.</p>
+            </div>
+        </section>
+    </main>
+    
+    <footer>
+        © 2025 GAFIS — Empowering Smart Money Decisions. User ID: <span id="footer-user-id">N/A</span>
+    </footer>
+
+    <script type="module">
+        import { initializeApp, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        // UPDATED: Added GoogleAuthProvider and signInWithPopup for Google Auth
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        setLogLevel('debug');
+
+        // --- GLOBAL FIREBASE VARIABLES (MANDATORY) ---
+        // Runtime-injectable Firebase config support
+        const appIdFromGlobal = typeof __app_id !== 'undefined' ? __app_id : null;
+        const rawFirebaseConfig = typeof __firebase_config !== 'undefined' ? __firebase_config : '{}';
+        let firebaseConfig = {};
+        try { firebaseConfig = JSON.parse(rawFirebaseConfig || '{}'); } catch(e) { firebaseConfig = {}; }
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let app, db, auth;
+        let userId = null;
+        let isAuthReady = false;
+        let isConfigured = false; // will be set after attempting runtime injection
+        let appId = appIdFromGlobal || 'default-app-id';
+
+        // --- DAILY TIPS DATA ---
+        const DAILY_TIPS = [
+            "Start saving 10% of everything you earn, no matter how small the amount.",
+            "Avoid impulse buying — wait 24 hours before making any non-essential purchase.",
+            "Track your expenses for a week to truly understand your current spending habits.",
+            "Set a clear savings goal and give it a specific, realistic deadline.",
+            "Pay yourself first: Move money to savings the very moment you get paid.",
+            "Review all your monthly subscriptions and cancel any you don't use regularly.",
+            "Automate your savings and debt payments to effortlessly stay on track.",
+            "Invest in learning new skills — your greatest asset is your earning potential.",
+            "Always keep an emergency fund of 3-6 months of expenses in a safe savings account."
+        ];
+        
+        // --- GAME STATE ---
+        const INITIAL_GAME_STATE = {
+            balance: 1000,
+            savings: 0,
+            month: 1,
+            monthlyIncome: 2500,
+            rent: 1200,
+            groceries: 400, // Now a monthly decision, not mandatory expense in 'NextMonth'
+            investmentsValue: 0,
+            loanDebt: 5000,
+            isGameOver: false,
+        };
+        let gameState = { ...INITIAL_GAME_STATE };
+
+        // --- FIRESTORE PATH CONSTANTS (FIXED TO ENSURE 6 SEGMENTS: C/D/C/D/C/D) ---
+        const GAME_COLLECTION_NAME = 'game_data'; 
+        const GAME_DOC_ID = 'financial_simulation_state'; 
+
+        // --- TIP DISPLAY FUNCTION ---
+        function displayRandomTip() {
+            const tipElement = document.getElementById('current-tip');
+            if (tipElement) {
+                const randomIndex = Math.floor(Math.random() * DAILY_TIPS.length);
+                tipElement.textContent = DAILY_TIPS[randomIndex];
+            }
+        }
+
+        // --- FIREBASE INITIALIZATION AND AUTHENTICATION ---
+
+        async function initializeFirebase() {
+            const playNowButton = document.getElementById('play-now-button');
+            const authStatusElement = document.getElementById('auth-status');
+            const loginButton = document.getElementById('login-button');
+
+            // Always enable Play Now for immediate testing, regardless of auth status
+            playNowButton.disabled = false;
+            // Try runtime-injected config from Hosting (quick and secure). If hosting provides
+            // `/__/firebase/init.json` this will contain the project's config and we can initialize.
+            async function tryRuntimeConfig() {
+                try {
+                    const resp = await fetch('/__/firebase/init.json');
+                    if (resp && resp.ok) {
+                        const init = await resp.json();
+                        // Different Hosting outputs may return structure with `config` or `firebaseConfig`
+                        firebaseConfig = init.config || init.firebaseConfig || init;
+                        appId = init.appId || init.projectId || appId;
+                    }
+                } catch (e) {
+                    // ignore - runtime config not available
+                }
+            }
+
+            await tryRuntimeConfig();
+            isConfigured = firebaseConfig && Object.keys(firebaseConfig).length > 0;
+
+            if (!isConfigured) {
+                // SCENARIO 1: TEST MODE (Firebase Config Missing)
+                // Allow the user to supply an email which will be used to derive a deterministic
+                // user id (SHA-256) so they can identify themselves across sessions without
+                // exposing a plain UID. If the user doesn't provide an email we fall back to
+                // an ephemeral random id.
+                document.getElementById('email-input-row').classList.remove('hidden');
+                authStatusElement.textContent = '⚠️ Running in TEST MODE (No persistence). Enter email to identify yourself, or click Play Now to start a temporary game.';
+                document.getElementById('footer-user-id').textContent = 'TEST_MODE';
+
+                loginButton.disabled = true; // Disable Google button since it won't work without config
+                loginButton.classList.add('opacity-50', 'cursor-not-allowed');
+
+                gameState = { ...INITIAL_GAME_STATE };
+                updateUI("Game Ready in Test Mode (Data will not be saved).");
+                isAuthReady = true;
+                displayRandomTip(); // Display first tip
+                return; // Stop Firebase initialization
+            }
 
 
-  <section class="hero">
-  <h2>Learn Finance the Fun Way 💰🎮</h2>
-  <p>Make smart money decisions through interactive challenges.</p>
+            // SCENARIO 2: STANDARD MODE (Firebase Config Present)
+            try {
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                
+                // 1. Set up state listener
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        // Use user.uid for persistence
+                        userId = user.uid; 
+                        authStatusElement.textContent = `✅ Signed in. Player ID: ${userId.substring(0, 8)}...`;
+                        document.getElementById('footer-user-id').textContent = userId;
+                        
+                        // Ensure buttons are correctly enabled/disabled
+                        loginButton.disabled = false;
+                        loginButton.classList.remove('opacity-50', 'cursor-not-allowed');
 
-  <div class="hero-buttons">
-    <button onclick="startGame()">🎮 Play Now</button>
-    <button id="login-btn" onclick="login()">🔑 Login</button>
-  </div>
+                        await loadGameState();
+                    } else {
+                        // User is signed out or initial anonymous/token failed
+                        userId = null;
+                        authStatusElement.textContent = 'Ready. Please sign in with Google to save your progress.';
+                        // Keep Play Now enabled
+                    }
+                    isAuthReady = true;
+                    displayRandomTip(); // Display first tip once authenticated state is set
+                });
+                
+                // 2. Initial sign-in attempt (either with provided token or anonymously)
+                authStatusElement.textContent = 'Attempting initial anonymous sign-in...';
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
 
-  <div id="quote-box" class="dynamic-box">
-    <p>💬 Loading daily motivation...</p>
-  </div>
-</section>
+            } catch (error) {
+                console.error("Firebase Initialization or Auth Error:", error);
+                authStatusElement.textContent = `❌ Auth Error: ${error.message}`;
+                // Fallback to test mode behavior if standard auth fails
+                userId = crypto.randomUUID(); 
+                isAuthReady = true;
+                gameState = { ...INITIAL_GAME_STATE };
+            }
+        }
 
-<section class="tips">
-  <h3>💡 GAFIS Tips of the Day</h3>
-  <ul id="tips-list">
-    <li>Loading tips...</li>
-  </ul>
-</section>
+        // --- EMAIL -> USER ID UTIL ---
+        async function emailToId(email) {
+            if (!email) return null;
+            const encoder = new TextEncoder();
+            const data = encoder.encode(email.trim().toLowerCase());
+            const hash = await crypto.subtle.digest('SHA-256', data);
+            const bytes = Array.from(new Uint8Array(hash));
+            const hex = bytes.map(b => b.toString(16).padStart(2, '0')).join('');
+            // Use a truncated hex (first 24 chars) to keep IDs shorter
+            return `email_${hex.substring(0,24)}`;
+        }
 
-<footer>© 2025 GAFIS – Empowering Smart Money Decisions</footer>
-  <script type="module" src="./script.js"></script>
+        // --- UI & STATE MANAGEMENT ---
+
+        function updateUI(message = "") {
+            document.getElementById('balance-display').textContent = `$${gameState.balance.toLocaleString()}`;
+            document.getElementById('savings-display').textContent = `$${gameState.savings.toLocaleString()}`;
+            document.getElementById('investments-display').textContent = `$${gameState.investmentsValue.toLocaleString()}`;
+            document.getElementById('debt-display').textContent = `-$${gameState.loanDebt.toLocaleString()}`;
+            
+            const totalFixedExpense = gameState.rent;
+            document.getElementById('expenses-display').textContent = `-$${totalFixedExpense.toLocaleString()}`;
+            document.getElementById('income-display').textContent = `$${gameState.monthlyIncome.toLocaleString()}`;
+
+            document.getElementById('month-display').textContent = `Month: ${gameState.month}`;
+            document.getElementById('message').textContent = message;
+            document.getElementById('user-display').textContent = `Player: ${userId ? userId.substring(0, 8) : 'Guest'}`;
+            
+            // Handle Game Over Screen
+            document.getElementById('game-over-modal').classList.toggle('hidden', !gameState.isGameOver);
+
+            // Disable all action buttons if game is over
+            document.querySelectorAll('#choices button, #game-screen button[onclick="handleAction(\'NextMonth\')"]').forEach(btn => {
+                btn.disabled = gameState.isGameOver;
+                btn.classList.toggle('opacity-50', gameState.isGameOver);
+                btn.classList.toggle('cursor-not-allowed', gameState.isGameOver);
+            });
+        }
+
+        function showScreen(screenId) {
+            // Get all main sections
+            const screens = ['welcome-screen', 'game-screen', 'about-screen'];
+            
+            // Hide all main sections
+            screens.forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+
+            // Show the requested section
+            const requestedScreen = document.getElementById(screenId);
+            if (requestedScreen) {
+                requestedScreen.classList.remove('hidden');
+            }
+
+            // If switching to game, ensure UI is updated
+            if (screenId === 'game-screen') updateUI();
+        }
+
+        // --- BUTTON HANDLERS ---
+
+        function handleLoginButton() {
+            const authStatusElement = document.getElementById('auth-status');
+            const popupWarning = document.getElementById('popup-warning');
+            
+            // Hide any previous warnings
+            popupWarning.classList.add('hidden'); 
+
+            if (!isAuthReady) {
+                authStatusElement.textContent = "Still connecting to the server. Please wait a moment.";
+                return;
+            }
+
+            if (!isConfigured) {
+                 authStatusElement.textContent = "❌ Sign-in failed: Firebase configuration missing (running in local/test mode).";
+                 return;
+            }
+
+            // Proceed with Google Sign-In (this handles both new sign-ups and existing sign-ins)
+            const provider = new GoogleAuthProvider();
+            authStatusElement.textContent = 'Launching Google Sign-In pop-up...';
+
+            signInWithPopup(auth, provider)
+                .then((result) => {
+                    // The onAuthStateChanged listener handles the rest
+                    console.log("Google Sign-In successful:", result.user.uid);
+                    authStatusElement.textContent = `Signed in as ${result.user.displayName || 'User'}! Loading game...`;
+                })
+                .catch((error) => {
+                    console.error("Google Sign-In Error:", error);
+                    let errorMessage = error.message;
+
+                    // Improved error handling for common issues
+                    if (error.code === 'auth/popup-closed-by-user') {
+                        errorMessage = 'Sign-in cancelled. Pop-up closed by user.';
+                    } else if (error.code === 'auth/popup-blocked') {
+                        // Display the prominent on-screen warning
+                        popupWarning.classList.remove('hidden'); 
+                        errorMessage = 'Pop-up blocked by your browser. Please allow pop-ups for this site.';
+                    } else if (error.code === 'auth/cancelled-popup-request') {
+                        errorMessage = 'Please try signing in again (request was interrupted).';
+                    } else if (error.code === 'auth/unauthorized-domain') {
+                        errorMessage = 'Domain not authorized for sign-in. This is a configuration error.';
+                    } else if (error.code === 'auth/network-request-failed') {
+                        errorMessage = 'Network error. Please check your internet connection.';
+                    }
+                    
+                    authStatusElement.textContent = `❌ Sign-in Error: ${errorMessage}`;
+                });
+        }
+
+        function handlePlayNowButton() {
+            // This button now always works, regardless of auth status, allowing temporary play.
+            showScreen('game-screen');
+        }
+
+        // --- FIRESTORE I/O ---
+
+        /**
+         * Constructs the Firestore Document Reference using 6 segments:
+         * /artifacts/{appId}/users/{userId}/game_data/financial_simulation_state
+         */
+        function getGameDocRef() {
+            // Only proceed if db is initialized and userId exists (i.e., not initial unauthenticated state)
+            if (!db || !appId || !userId || !isConfigured) {
+                return null;
+            }
+             return doc(
+                db, 
+                'artifacts', appId, 
+                'users', userId, 
+                GAME_COLLECTION_NAME, GAME_DOC_ID
+            );
+        }
+
+        async function saveGameState() {
+            if (!userId || !db || !isConfigured || !auth.currentUser) return; // Skip if unauthenticated or in Test Mode
+            const userDocRef = getGameDocRef();
+            if (!userDocRef) return; // Guard against null reference
+            
+            try {
+                // Only save serializable data
+                const stateToSave = { 
+                    balance: gameState.balance, 
+                    savings: gameState.savings, 
+                    month: gameState.month, 
+                    monthlyIncome: gameState.monthlyIncome, 
+                    rent: gameState.rent, 
+                    groceries: gameState.groceries, 
+                    investmentsValue: gameState.investmentsValue, 
+                    loanDebt: gameState.loanDebt,
+                    isGameOver: gameState.isGameOver 
+                };
+                await setDoc(userDocRef, stateToSave, { merge: true });
+            } catch (error) {
+                console.error("Error saving game state:", error);
+            }
+        }
+
+        async function loadGameState() {
+            if (!userId || !db || !isConfigured || !auth.currentUser) return; // Skip if unauthenticated or in Test Mode
+            const userDocRef = getGameDocRef();
+            if (!userDocRef) return; // Guard against null reference
+
+            // Check if user is authenticated via Google (or custom token) before snapshot
+            if (auth.currentUser.isAnonymous) {
+                // User is anonymous, only allow snapshot if this is the required flow, but usually loading is tied to persistence.
+                // For this app, we prioritize Google Sign-In for persistence.
+                return;
+            }
+
+            onSnapshot(userDocRef, (docSnapshot) => {
+                if (docSnapshot.exists()) {
+                    const data = docSnapshot.data();
+                    gameState = { ...INITIAL_GAME_STATE, ...data }; 
+                } else {
+                    // Save initial state if no data exists
+                    saveGameState();
+                }
+                updateUI("Game Loaded!");
+            }, (error) => {
+                console.error("Error listening to document:", error);
+            });
+        }
+
+        // --- GAME LOGIC ---
+
+        window.handleAction = function(actionType) {
+            let message = "";
+            if (gameState.isGameOver && actionType !== 'Reset') {
+                message = "The game is over. Please click 'Start New Game' to continue.";
+                updateUI(message);
+                return;
+            }
+
+            switch (actionType) {
+                case 'Groceries':
+                    const groceriesCost = 400;
+                    if (gameState.balance >= groceriesCost) {
+                        gameState.balance -= groceriesCost;
+                        message = `-$${groceriesCost}: Bought groceries for the month.`;
+                    } else {
+                        message = `You need $${groceriesCost} to buy groceries!`;
+                    }
+                    break;
+                case 'Save':
+                    const amountToMove = 500;
+                    if (gameState.balance >= amountToMove) {
+                        gameState.balance -= amountToMove;
+                        gameState.savings += amountToMove;
+                        message = `-$${amountToMove}: Transferred funds to savings.`;
+                    } else {
+                        message = "Not enough cash to transfer to savings.";
+                    }
+                    break;
+                case 'Invest':
+                    const investmentAmount = 500;
+                    if (gameState.balance >= investmentAmount) {
+                        gameState.balance -= investmentAmount;
+                        gameState.investmentsValue += investmentAmount;
+                        message = `-$${investmentAmount}: Invested in the market. Value will adjust next month.`;
+                    } else {
+                        message = `Investment requires $${investmentAmount}.`;
+                    }
+                    break;
+                case 'PayDebt':
+                    const debtPayment = 500;
+                    if (gameState.balance >= debtPayment) {
+                        gameState.balance -= debtPayment;
+                        gameState.loanDebt -= debtPayment;
+                        if (gameState.loanDebt < 0) gameState.loanDebt = 0;
+                        message = `-$${debtPayment}: Paid down loan debt!`;
+                    } else {
+                        message = `You need $${debtPayment} to make a debt payment.`;
+                    }
+                    break;
+                case 'NextMonth':
+                    const fixedExpenses = gameState.rent;
+                    let nextMonthMessage = `Month ${gameState.month} Financial Report:\n`;
+
+                    // 1. Check for Game Over before processing expenses
+                    if (gameState.balance < fixedExpenses) {
+                        gameState.isGameOver = true;
+                        document.getElementById('game-over-reason').textContent = `You couldn't cover the mandatory $${fixedExpenses.toLocaleString()} rent expense.`;
+                        message = "GAME OVER triggered.";
+                        break; // Stop processing the month
+                    }
+
+                    // 2. Process Expenses and Income
+                    gameState.balance -= fixedExpenses;
+                    gameState.balance += gameState.monthlyIncome;
+                    nextMonthMessage += `+ $${gameState.monthlyIncome.toLocaleString()} Income, - $${fixedExpenses.toLocaleString()} Rent/Fixed Costs.\n`;
+
+                    // 3. Savings Interest
+                    const savingsInterest = Math.round(gameState.savings * 0.002); // 0.2% monthly
+                    gameState.savings += savingsInterest;
+                    nextMonthMessage += `+ $${savingsInterest.toLocaleString()} earned from Savings Interest.\n`;
+
+                    // 4. Investment Performance (Random return between -1% and +4% monthly)
+                    const investmentReturnRate = (Math.random() * 0.05) - 0.01; 
+                    const investmentChange = Math.round(gameState.investmentsValue * investmentReturnRate);
+                    gameState.investmentsValue += investmentChange;
+                    const changeType = investmentChange >= 0 ? 'Gained' : 'Lost';
+                    nextMonthMessage += `${changeType} $${Math.abs(investmentChange).toLocaleString()} on Investments (${(investmentReturnRate * 100).toFixed(2)}%).\n`;
+
+                    // 5. Debt Interest
+                    if (gameState.loanDebt > 0) {
+                        const debtInterest = Math.round(gameState.loanDebt * 0.004); // 0.4% monthly interest
+                        gameState.loanDebt += debtInterest;
+                        nextMonthMessage += `-$${debtInterest.toLocaleString()} added to Loan Debt (interest).\n`;
+                    }
+                    
+                    // 6. Advance Month
+                    gameState.month += 1;
+                    message = nextMonthMessage;
+                    break;
+                
+                case 'Reset':
+                    gameState = { ...INITIAL_GAME_STATE };
+                    gameState.isGameOver = false;
+                    message = "Game reset. Starting from Month 1.";
+                    break;
+            }
+            
+            // Ensure no metrics drop below zero unnecessarily
+            if (gameState.savings < 0) gameState.savings = 0;
+            if (gameState.investmentsValue < 0) gameState.investmentsValue = 0;
+            if (gameState.loanDebt < 0) gameState.loanDebt = 0;
+            
+            updateUI(message);
+            saveGameState();
+        }
+        
+        // --- EVENT LISTENERS ---
+        document.getElementById('login-button').addEventListener('click', handleLoginButton);
+        document.getElementById('play-now-button').addEventListener('click', (e) => {
+            e.preventDefault();
+            handlePlayNowButton();
+        });
+        
+        // Navigation links now use the new showScreen function
+        document.getElementById('nav-home-link').addEventListener('click', (e) => {
+            e.preventDefault();
+            showScreen('welcome-screen');
+        });
+        document.getElementById('nav-play-link').addEventListener('click', (e) => {
+            e.preventDefault();
+            handlePlayNowButton(); // This now calls showScreen('game-screen') internally
+        });
+        document.getElementById('nav-about-link').addEventListener('click', (e) => {
+            e.preventDefault();
+            showScreen('about-screen');
+        });
+
+        document.getElementById('refresh-tip-button').addEventListener('click', displayRandomTip);
+        
+        // Wire the email button (for Test Mode identity)
+        const useEmailBtn = document.getElementById('use-email-button');
+        if (useEmailBtn) {
+            useEmailBtn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                const emailVal = (document.getElementById('email-input') || {}).value || '';
+                const authStatusEl = document.getElementById('auth-status');
+                if (!emailVal || !emailVal.includes('@')) {
+                    if (authStatusEl) authStatusEl.textContent = 'Please enter a valid email address.';
+                    return;
+                }
+                const derived = await emailToId(emailVal);
+                if (derived) {
+                    userId = derived;
+                    document.getElementById('footer-user-id').textContent = `guest:${userId.substring(0,12)}`;
+                    document.getElementById('email-input-row').classList.add('hidden');
+                    if (authStatusEl) authStatusEl.textContent = 'Using provided email for local identity (TEST MODE). Click Play Now.';
+                    isAuthReady = true;
+                    updateUI('Ready with provided email (Test Mode).');
+                }
+            });
+        }
+
+        window.onload = initializeFirebase;
+    </script>
 </body>
 </html>
-
