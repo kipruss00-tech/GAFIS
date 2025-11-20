@@ -2,12 +2,6 @@
   "buildCommand": "echo 'Static site - no build needed'",
   "outputDirectory": "public",
   "framework": "static",
-  "env": [
-    {
-      "key": "FIREBASE_CONFIG",
-      "value": "@firebase-config"
-    }
-  ],
   "redirects": [
     {
       "source": "/",
