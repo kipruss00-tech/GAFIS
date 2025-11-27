@@ -82,18 +82,44 @@
         }
 
         /* Animated GAFIS Header */
-        h1 {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            color: #ffcc00; 
-            text-shadow: 0 0 10px rgba(255, 204, 0, 0.7); 
-            animation: pulse 3s ease-in-out infinite;
+        /* Larger, more pronounced welcome header on the welcome screen */
+        #welcome-screen h1 {
+            font-size: 4.2rem; /* larger per user request */
+            margin-bottom: 0.8rem;
+            color: #ffd84d;
+            text-shadow: 0 0 12px rgba(255, 216, 77, 0.95), 0 0 30px rgba(255,160,50,0.25);
+            animation: welcome-pulse 2.8s ease-in-out infinite;
+            letter-spacing: 1px;
         }
-        
-        @keyframes pulse {
+
+        @keyframes welcome-pulse {
             0% { transform: scale(1); filter: brightness(100%); }
-            50% { transform: scale(1.03); filter: brightness(120%); }
+            40% { transform: scale(1.06); filter: brightness(140%); text-shadow: 0 0 22px rgba(255,216,77,1); }
+            70% { transform: scale(1.02); filter: brightness(115%); }
             100% { transform: scale(1); filter: brightness(100%); }
+        }
+
+        /* Month transition animation: used when advancing months */
+        .month-animate {
+            animation: month-flash 0.9s cubic-bezier(.2,.9,.3,1);
+        }
+
+        @keyframes month-flash {
+            0% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 0 rgba(0,0,0,0)); }
+            30% { transform: translateY(-6px) scale(1.03); filter: drop-shadow(0 8px 18px rgba(0,170,255,0.18)); }
+            60% { transform: translateY(2px) scale(1.01); }
+            100% { transform: translateY(0) scale(1); }
+        }
+
+        /* Metric pulse for balance updates */
+        .metric-pulse {
+            animation: metric-pop 0.8s ease-out;
+        }
+
+        @keyframes metric-pop {
+            0% { transform: scale(1); color: inherit; }
+            30% { transform: scale(1.08); color: #fff9cc; }
+            100% { transform: scale(1); color: inherit; }
         }
 
         /* Gradient H2 Header */
@@ -245,16 +271,37 @@
             color: #041423;
             font-weight: 700;
             z-index: 9999;
-            transform: translateY(-10px);
+            transform: translateY(-10px) scale(0.98);
             opacity: 0;
             pointer-events: none;
         }
 
+        /* pop + scale a bit for more excitement */
         #surprise-popup.show {
-            transform: translateY(0);
+            transform: translateY(0) scale(1.02);
             opacity: 1;
             pointer-events: auto;
-            transition: opacity 0.4s ease, transform 0.4s cubic-bezier(.2,.8,.2,1);
+            transition: opacity 0.35s ease, transform 0.45s cubic-bezier(.2,.8,.2,1);
+            animation: surprise-bounce 0.9s ease-out;
+        }
+
+        @keyframes surprise-bounce {
+            0% { transform: translateY(-12px) scale(0.92); opacity: 0; }
+            40% { transform: translateY(6px) scale(1.06); opacity: 1; }
+            70% { transform: translateY(-2px) scale(0.99); }
+            100% { transform: translateY(0) scale(1.02); }
+        }
+
+        /* Choice button entrance animation */
+        .choice-btn {
+            opacity: 0;
+            transform: translateY(12px) scale(0.98);
+            transition: transform 0.36s cubic-bezier(.2,.9,.25,1), opacity 0.28s ease;
+        }
+
+        .choice-btn.appear {
+            opacity: 1;
+            transform: translateY(0) scale(1);
         }
 
     </style>
@@ -680,6 +727,27 @@
             }, 3500);
         }
 
+        // --- UI Animations ---
+        function animateMonthTransition() {
+            try {
+                const monthEl = document.getElementById('month-display');
+                const balanceEl = document.getElementById('balance-display');
+                const metricLabel = document.querySelector('.metric-label');
+                if (monthEl) {
+                    monthEl.classList.add('month-animate');
+                    setTimeout(() => monthEl.classList.remove('month-animate'), 900);
+                }
+                if (balanceEl) {
+                    balanceEl.classList.add('metric-pulse');
+                    setTimeout(() => balanceEl.classList.remove('metric-pulse'), 900);
+                }
+                if (metricLabel) {
+                    metricLabel.classList.add('metric-pulse');
+                    setTimeout(() => metricLabel.classList.remove('metric-pulse'), 900);
+                }
+            } catch (e) { /* ignore animation errors */ }
+        }
+
         // --- BUTTON HANDLERS ---
 
         function handleLoginButton() {
@@ -835,11 +903,13 @@
             if (!choicesEl) return;
             choicesEl.innerHTML = ''; // clear previous
 
+            let idx = 0;
             const month = gameState.month;
             const createBtn = (label, action, desc = '', cls = '') => {
                 const btn = document.createElement('button');
                 btn.textContent = label;
-                btn.className = cls || '';
+                // Keep existing styling from .btn and add .choice-btn for entrance animation
+                btn.className = (cls ? cls + ' ' : '') + 'choice-btn btn';
                 btn.dataset.desc = desc || '';
                 btn.addEventListener('click', () => window.handleAction(action));
                 btn.addEventListener('mouseenter', () => {
@@ -854,7 +924,14 @@
                     const d = document.getElementById('choice-desc');
                     if (d) d.textContent = 'Choose an action each month. Hover a choice to see details.';
                 });
+
                 choicesEl.appendChild(btn);
+
+                // Staggered reveal for nicer UX
+                const myIdx = idx++;
+                setTimeout(() => {
+                    btn.classList.add('appear');
+                }, 80 * myIdx);
             };
 
             // Early game choices
@@ -1119,6 +1196,9 @@
             if (gameState.loanDebt < 0) gameState.loanDebt = 0;
 
             updateUI(message);
+            // small UI animation to highlight the month and balance changes
+            try { animateMonthTransition(); } catch (e) { /* ignore */ }
+
             saveGameState();
 
             // After processing a month, generate new monthly choices
