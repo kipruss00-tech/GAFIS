@@ -24,8 +24,15 @@
             background-color: #040d1a;
             padding: 1rem 2rem;
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
+            align-items: center;
             border-bottom: 1px solid #00aaff50;
+        }
+
+        nav .nav-center {
+            display: flex;
+            justify-content: center;
+            flex: 1;
         }
 
         nav a {
@@ -39,6 +46,28 @@
         nav a:hover {
             color: #00aaff;
             text-shadow: 0 0 5px rgba(0, 255, 204, 0.5);
+        }
+
+        #sign-out-button {
+            background: linear-gradient(90deg, #ff6b6b, #ee5a52);
+            padding: 0.6rem 1.2rem;
+            font-size: 0.85rem;
+            border-radius: 8px;
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
+        }
+
+        #sign-out-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(255, 107, 107, 0.5);
+        }
+
+        #sign-out-button.hidden {
+            display: none;
         }
 
         main {
@@ -202,9 +231,12 @@
 </head>
 <body>
     <nav>
-        <a id="nav-home-link" href="#">Home</a>
-        <a id="nav-play-link" href="#">Play</a>
-        <a id="nav-about-link" href="#">About</a>
+        <div class="nav-center">
+            <a id="nav-home-link" href="#">Home</a>
+            <a id="nav-play-link" href="#">Play</a>
+            <a id="nav-about-link" href="#">About</a>
+        </div>
+        <button id="sign-out-button" class="hidden">🚪 Sign Out</button>
     </nav>
     <main>
         <!-- Welcome/Login Screen -->
@@ -361,7 +393,7 @@
     <script type="module">
         import { initializeApp, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         // UPDATED: Added GoogleAuthProvider and signInWithPopup for Google Auth
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         setLogLevel('debug');
@@ -428,7 +460,7 @@
             const loginButton = document.getElementById('login-button');
 
             // Always enable Play Now for immediate testing, regardless of auth status
-            playNowButton.disabled = false;
+            playNowButton.disabled = false;wai
             // Try runtime-injected config from Hosting (quick and secure). If hosting provides
             // `/__/firebase/init.json` this will contain the project's config and we can initialize.
             async function tryRuntimeConfig() {
@@ -477,11 +509,15 @@
                 
                 // 1. Set up state listener
                 onAuthStateChanged(auth, async (user) => {
+                    const signOutBtn = document.getElementById('sign-out-button');
                     if (user) {
                         // Use user.uid for persistence
                         userId = user.uid; 
                         authStatusElement.textContent = `✅ Signed in. Player ID: ${userId.substring(0, 8)}...`;
                         document.getElementById('footer-user-id').textContent = userId;
+                        
+                        // Show sign-out button when user is logged in
+                        if (signOutBtn) signOutBtn.classList.remove('hidden');
                         
                         // Ensure buttons are correctly enabled/disabled
                         loginButton.disabled = false;
@@ -492,6 +528,10 @@
                         // User is signed out or initial anonymous/token failed
                         userId = null;
                         authStatusElement.textContent = 'Ready. Please sign in with Google to save your progress.';
+                        
+                        // Hide sign-out button when user is not logged in
+                        if (signOutBtn) signOutBtn.classList.add('hidden');
+                        
                         // Keep Play Now enabled
                     }
                     isAuthReady = true;
@@ -629,6 +669,16 @@
         function handlePlayNowButton() {
             // This button now always works, regardless of auth status, allowing temporary play.
             showScreen('game-screen');
+        }
+
+        function handleSignOut() {
+            if (!auth) return;
+            signOut(auth).then(() => {
+                // onAuthStateChanged listener will handle the UI update
+                showScreen('welcome-screen');
+            }).catch((error) => {
+                console.error("Sign-out error:", error);
+            });
         }
 
         // --- FIRESTORE I/O ---
@@ -830,6 +880,12 @@
         });
 
         document.getElementById('refresh-tip-button').addEventListener('click', displayRandomTip);
+        
+        // Wire the sign-out button
+        const signOutBtn = document.getElementById('sign-out-button');
+        if (signOutBtn) {
+            signOutBtn.addEventListener('click', handleSignOut);
+        }
         
         // Wire the email button (for Test Mode identity)
         const useEmailBtn = document.getElementById('use-email-button');
