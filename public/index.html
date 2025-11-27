@@ -291,6 +291,27 @@
                     <!-- Tip will be injected here by JS -->
                 </p>
             </section>
+
+            <!-- Rent Selection Modal (Hidden until game starts) -->
+            <div id="rent-selection-modal" class="hidden fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center p-4 z-50">
+                <div class="bg-blue-900 border-2 border-cyan-400 p-8 rounded-lg shadow-2xl text-center max-w-md">
+                    <h2 class="text-3xl font-bold mb-4 text-yellow-300">Choose Your Living Situation 🏠</h2>
+                    <p class="text-white mb-6">Select your monthly rent. Higher rent = more stability but less money to invest.</p>
+                    
+                    <div class="space-y-3">
+                        <button onclick="window.startGameWithRent(600)" class="w-full bg-gradient-to-r from-green-500 to-green-400 hover:from-green-400 hover:to-green-300 text-black font-bold py-3 px-4 rounded-lg transition transform hover:scale-105">
+                            🏘️ Budget Apartment<br/><span class="text-sm">$600/month (Riskier)</span>
+                        </button>
+                        <button onclick="window.startGameWithRent(800)" class="w-full bg-gradient-to-r from-cyan-400 to-blue-400 hover:from-cyan-300 hover:to-blue-300 text-black font-bold py-3 px-4 rounded-lg transition transform hover:scale-105">
+                            🏢 Mid-Range Apartment<br/><span class="text-sm">$800/month (Balanced)</span>
+                        </button>
+                        <button onclick="window.startGameWithRent(1000)" class="w-full bg-gradient-to-r from-purple-500 to-pink-400 hover:from-purple-400 hover:to-pink-300 text-black font-bold py-3 px-4 rounded-lg transition transform hover:scale-105">
+                            🏰 Nice Apartment<br/><span class="text-sm">$1000/month (Safer)</span>
+                        </button>
+                    </div>
+                    <p class="text-gray-300 text-xs mt-4">You start with $3,000 and earn $3,500/month. Choose wisely!</p>
+                </div>
+            </div>
         </section>
 
         <!-- Main Game Screen (Initially Hidden) -->
@@ -427,14 +448,14 @@
         
         // --- GAME STATE ---
         const INITIAL_GAME_STATE = {
-            balance: 1000,
+            balance: 3000,
             savings: 0,
             month: 1,
-            monthlyIncome: 2500,
-            rent: 1200,
+            monthlyIncome: 3500,
+            rent: 800,
             groceries: 400, // Now a monthly decision, not mandatory expense in 'NextMonth'
             investmentsValue: 0,
-            loanDebt: 5000,
+            loanDebt: 2000,
             isGameOver: false,
         };
         let gameState = { ...INITIAL_GAME_STATE };
@@ -667,8 +688,19 @@
         }
 
         function handlePlayNowButton() {
-            // This button now always works, regardless of auth status, allowing temporary play.
+            // This button now shows the rent selection modal
+            document.getElementById('rent-selection-modal').classList.remove('hidden');
+        }
+
+        window.startGameWithRent = function(selectedRent) {
+            // Set the rent and update starting balance if needed
+            gameState = { ...INITIAL_GAME_STATE };
+            gameState.rent = selectedRent;
+            
+            // Close rent modal and show game screen
+            document.getElementById('rent-selection-modal').classList.add('hidden');
             showScreen('game-screen');
+            updateUI(`Game started! You chose $${selectedRent}/month rent. Good luck!`);
         }
 
         function handleSignOut() {
