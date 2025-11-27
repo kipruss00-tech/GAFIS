@@ -631,8 +631,11 @@
                 requestedScreen.classList.remove('hidden');
             }
 
-            // If switching to game, ensure UI is updated
-            if (screenId === 'game-screen') updateUI();
+            // If switching to game, ensure UI is updated and show choices
+            if (screenId === 'game-screen') {
+                updateUI();
+                generateMonthlyChoices();
+            }
         }
 
         // --- BUTTON HANDLERS ---
@@ -784,6 +787,41 @@
 
         // --- GAME LOGIC ---
 
+        // Generate month-specific choice buttons
+        function generateMonthlyChoices() {
+            const choicesEl = document.getElementById('choices');
+            if (!choicesEl) return;
+            choicesEl.innerHTML = ''; // clear previous
+
+            const month = gameState.month;
+            const createBtn = (label, action, cls = '') => {
+                const btn = document.createElement('button');
+                btn.textContent = label;
+                btn.className = cls || '';
+                btn.addEventListener('click', () => window.handleAction(action));
+                choicesEl.appendChild(btn);
+            };
+
+            // Early game choices
+            if (month <= 3) {
+                createBtn('Take Side Job (+$600 now)', 'SideJob');
+                createBtn('Pay for Skill Course (-$400 → +$150/mo)', 'Course');
+                createBtn('Build Emergency Fund (-$300 → move to savings)', 'EmergencyFund');
+            } else if (month <= 6) {
+                createBtn('Pay Extra on Loan (-$500)', 'PayLoanExtra');
+                createBtn('Buy Dividend Asset (-$500)', 'BuyDividend');
+                createBtn('Sell Some Investments (+cash)', 'SellInvestments');
+            } else if (month <= 12) {
+                createBtn('Take Freelance Contract (+$900 now)', 'SideJobBig');
+                createBtn('Refinance Loan (swap -$1000 now reduce debt by $1100)', 'Refinance');
+                createBtn('Luxury Purchase (-$700, morale)', 'Luxury');
+            } else {
+                createBtn('High-Risk Investment (-$700)', 'HighRiskInvest');
+                createBtn('Pay Down Debt Aggressively (-$1000)', 'PayLoanExtraBig');
+                createBtn('Diversify into Bonds (-$500)', 'BuyDividend');
+            }
+        }
+
         window.handleAction = function(actionType) {
             let message = "";
             if (gameState.isGameOver && actionType !== 'Reset') {
@@ -793,7 +831,7 @@
             }
 
             switch (actionType) {
-                case 'Groceries':
+                case 'Groceries': {
                     const groceriesCost = 400;
                     if (gameState.balance >= groceriesCost) {
                         gameState.balance -= groceriesCost;
@@ -802,7 +840,8 @@
                         message = `You need $${groceriesCost} to buy groceries!`;
                     }
                     break;
-                case 'Save':
+                }
+                case 'Save': {
                     const amountToMove = 500;
                     if (gameState.balance >= amountToMove) {
                         gameState.balance -= amountToMove;
@@ -812,7 +851,8 @@
                         message = "Not enough cash to transfer to savings.";
                     }
                     break;
-                case 'Invest':
+                }
+                case 'Invest': {
                     const investmentAmount = 500;
                     if (gameState.balance >= investmentAmount) {
                         gameState.balance -= investmentAmount;
@@ -822,7 +862,8 @@
                         message = `Investment requires $${investmentAmount}.`;
                     }
                     break;
-                case 'PayDebt':
+                }
+                case 'PayDebt': {
                     const debtPayment = 500;
                     if (gameState.balance >= debtPayment) {
                         gameState.balance -= debtPayment;
@@ -833,7 +874,125 @@
                         message = `You need $${debtPayment} to make a debt payment.`;
                     }
                     break;
-                case 'NextMonth':
+                }
+
+                // New choices
+                case 'SideJob': {
+                    const earn = 600;
+                    gameState.balance += earn;
+                    message = `+$${earn}: Completed a side job.`;
+                    break;
+                }
+                case 'SideJobBig': {
+                    const earn = 900;
+                    gameState.balance += earn;
+                    message = `+$${earn}: Freelance contract completed.`;
+                    break;
+                }
+                case 'Course': {
+                    const cost = 400;
+                    if (gameState.balance >= cost) {
+                        gameState.balance -= cost;
+                        gameState.monthlyIncome += 150;
+                        message = `-$${cost}: Took a course. Monthly income +$150.`;
+                    } else {
+                        message = 'Not enough cash for the course.';
+                    }
+                    break;
+                }
+                case 'EmergencyFund': {
+                    const amt = 300;
+                    if (gameState.balance >= amt) {
+                        gameState.balance -= amt;
+                        gameState.savings += amt;
+                        message = `-$${amt}: Added to emergency savings.`;
+                    } else {
+                        message = 'Not enough cash to build emergency fund.';
+                    }
+                    break;
+                }
+                case 'SellInvestments': {
+                    const sell = Math.min( Math.round(gameState.investmentsValue * 0.25), gameState.investmentsValue );
+                    if (sell > 0) {
+                        gameState.investmentsValue -= sell;
+                        gameState.balance += sell;
+                        message = `+$${sell}: Sold some investments for cash.`;
+                    } else {
+                        message = 'No investments available to sell.';
+                    }
+                    break;
+                }
+                case 'BuyDividend': {
+                    const cost = 500;
+                    if (gameState.balance >= cost) {
+                        gameState.balance -= cost;
+                        // Represent dividend as small savings-like value
+                        gameState.investmentsValue += cost;
+                        message = `-$${cost}: Bought dividend asset (long-term).`;
+                    } else {
+                        message = 'Not enough cash to buy asset.';
+                    }
+                    break;
+                }
+                case 'Refinance': {
+                    const cost = 1000;
+                    if (gameState.balance >= cost) {
+                        gameState.balance -= cost;
+                        gameState.loanDebt = Math.max(0, gameState.loanDebt - 1100);
+                        message = `-$${cost}: Refinance processed; loan reduced.`;
+                    } else {
+                        message = 'Not enough cash to refinance.';
+                    }
+                    break;
+                }
+                case 'Luxury': {
+                    const cost = 700;
+                    if (gameState.balance >= cost) {
+                        gameState.balance -= cost;
+                        message = `-$${cost}: Luxury purchase. Enjoy!`;
+                    } else {
+                        message = 'Not enough cash for luxury purchase.';
+                    }
+                    break;
+                }
+                case 'HighRiskInvest': {
+                    const cost = 700;
+                    if (gameState.balance >= cost) {
+                        gameState.balance -= cost;
+                        // High risk: immediate random multiplier
+                        const ret = Math.round(cost * (Math.random() * 1.5 - 0.5));
+                        gameState.investmentsValue += Math.max(0, cost + ret);
+                        message = `-$${cost}: High-risk investment placed.`;
+                    } else {
+                        message = 'Not enough cash for high-risk investment.';
+                    }
+                    break;
+                }
+                case 'PayLoanExtra': {
+                    const pay = 500;
+                    if (gameState.balance >= pay) {
+                        gameState.balance -= pay;
+                        gameState.loanDebt -= pay;
+                        if (gameState.loanDebt < 0) gameState.loanDebt = 0;
+                        message = `-$${pay}: Extra loan payment made.`;
+                    } else {
+                        message = 'Not enough cash to pay extra on loan.';
+                    }
+                    break;
+                }
+                case 'PayLoanExtraBig': {
+                    const pay = 1000;
+                    if (gameState.balance >= pay) {
+                        gameState.balance -= pay;
+                        gameState.loanDebt -= pay;
+                        if (gameState.loanDebt < 0) gameState.loanDebt = 0;
+                        message = `-$${pay}: Large loan payment made.`;
+                    } else {
+                        message = 'Not enough cash to pay extra on loan.';
+                    }
+                    break;
+                }
+                case 'NextMonth': {
                     const fixedExpenses = gameState.rent;
                     let nextMonthMessage = `Month ${gameState.month} Financial Report:\n`;
 
@@ -855,12 +1014,13 @@
                     gameState.savings += savingsInterest;
                     nextMonthMessage += `+ $${savingsInterest.toLocaleString()} earned from Savings Interest.\n`;
 
-                    // 4. Investment Performance (Random return between -1% and +4% monthly)
-                    const investmentReturnRate = (Math.random() * 0.05) - 0.01; 
+                    // 4. Investment Performance — volatility increases slightly over time
+                    const volatility = 0.05 + Math.min(0.05, gameState.month * 0.001); // grows slowly
+                    const investmentReturnRate = (Math.random() * (volatility + 0.01)) - 0.02; 
                     const investmentChange = Math.round(gameState.investmentsValue * investmentReturnRate);
                     gameState.investmentsValue += investmentChange;
-                    const changeType = investmentChange >= 0 ? 'Gained' : 'Lost';
-                    nextMonthMessage += `${changeType} $${Math.abs(investmentChange).toLocaleString()} on Investments (${(investmentReturnRate * 100).toFixed(2)}%).\n`;
+                    const changeType2 = investmentChange >= 0 ? 'Gained' : 'Lost';
+                    nextMonthMessage += `${changeType2} $${Math.abs(investmentChange).toLocaleString()} on Investments (${(investmentReturnRate * 100).toFixed(2)}%).\n`;
 
                     // 5. Debt Interest
                     if (gameState.loanDebt > 0) {
@@ -868,26 +1028,44 @@
                         gameState.loanDebt += debtInterest;
                         nextMonthMessage += `-$${debtInterest.toLocaleString()} added to Loan Debt (interest).\n`;
                     }
-                    
+
+                    // Hidden: surprise reward every 3 months (player won't see it's a pattern)
+                    if ((gameState.month % 3) === 0) {
+                        const bonus = Math.round(300 + Math.random() * 600); // 300-900
+                        gameState.balance += bonus;
+                        nextMonthMessage += `\nA surprise bonus arrived: +$${bonus}!`;
+                    }
+
+                    // Difficulty scaling: rent increases slightly every 6 months
+                    if (gameState.month > 0 && (gameState.month % 6) === 0) {
+                        gameState.rent = Math.round(gameState.rent * 1.05);
+                        nextMonthMessage += `\nYour rent increased slightly to $${gameState.rent}.`;
+                    }
+
                     // 6. Advance Month
                     gameState.month += 1;
                     message = nextMonthMessage;
                     break;
-                
-                case 'Reset':
+                }
+
+                case 'Reset': {
                     gameState = { ...INITIAL_GAME_STATE };
                     gameState.isGameOver = false;
                     message = "Game reset. Starting from Month 1.";
                     break;
+                }
             }
-            
+
             // Ensure no metrics drop below zero unnecessarily
             if (gameState.savings < 0) gameState.savings = 0;
             if (gameState.investmentsValue < 0) gameState.investmentsValue = 0;
             if (gameState.loanDebt < 0) gameState.loanDebt = 0;
-            
+
             updateUI(message);
             saveGameState();
+
+            // After processing a month, generate new monthly choices
+            generateMonthlyChoices();
         }
         
         // --- EVENT LISTENERS ---
