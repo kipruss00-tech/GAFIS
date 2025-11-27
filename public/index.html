@@ -227,6 +227,36 @@
             box-shadow: 0 0 15px rgba(255, 59, 59, 0.5);
         }
 
+        /* Choice description */
+        #choice-desc {
+            min-height: 2.2rem;
+            transition: opacity 0.2s ease;
+        }
+
+        /* Surprise bonus popup */
+        #surprise-popup {
+            position: fixed;
+            right: 1rem;
+            top: 1rem;
+            background: linear-gradient(90deg,#ffd86b,#ff6b6b);
+            padding: 0.8rem 1.2rem;
+            border-radius: 10px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+            color: #041423;
+            font-weight: 700;
+            z-index: 9999;
+            transform: translateY(-10px);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #surprise-popup.show {
+            transform: translateY(0);
+            opacity: 1;
+            pointer-events: auto;
+            transition: opacity 0.4s ease, transform 0.4s cubic-bezier(.2,.8,.2,1);
+        }
+
     </style>
 </head>
 <body>
@@ -360,12 +390,8 @@
             
             <!-- Action Buttons -->
             <h2 class="mt-8 mb-4">Current Month Actions</h2>
-            <div id="choices" class="flex flex-wrap justify-center space-x-4">
-                <button onclick="handleAction('Groceries')">Buy Groceries (-$400)</button>
-                <button onclick="handleAction('Save')">Transfer to Savings (-$500)</button>
-                <button onclick="handleAction('Invest')">Invest in Stocks (-$500)</button>
-                <button onclick="handleAction('PayDebt')">Pay Down Loan (-$500)</button>
-            </div>
+            <div id="choices" class="flex flex-wrap justify-center space-x-4"></div>
+            <div id="choice-desc" class="mt-4 text-sm text-gray-300 max-w-3xl text-center">Choose an action each month. Hover a choice to see details.</div>
             
             <h2 class="mt-8 mb-4">Advance Simulation</h2>
             <button onclick="handleAction('NextMonth')" class="bg-indigo-600 hover:bg-indigo-500">
@@ -407,6 +433,9 @@
     <footer>
         © 2025 GAFIS — Empowering Smart Money Decisions. User ID: <span id="footer-user-id">N/A</span>
     </footer>
+
+    <!-- Surprise bonus popup -->
+    <div id="surprise-popup" aria-hidden="true">+ $0 Surprise!</div>
 
     <!-- Load Firebase config if available -->
     <script src="firebase-config.js"></script>
@@ -638,6 +667,19 @@
             }
         }
 
+        // --- Surprise popup helper ---
+        function showSurprise(amount) {
+            const el = document.getElementById('surprise-popup');
+            if (!el) return;
+            el.textContent = `🎉 Surprise bonus: +$${amount}`;
+            el.classList.add('show');
+            el.setAttribute('aria-hidden','false');
+            setTimeout(() => {
+                el.classList.remove('show');
+                el.setAttribute('aria-hidden','true');
+            }, 3500);
+        }
+
         // --- BUTTON HANDLERS ---
 
         function handleLoginButton() {
@@ -794,31 +836,44 @@
             choicesEl.innerHTML = ''; // clear previous
 
             const month = gameState.month;
-            const createBtn = (label, action, cls = '') => {
+            const createBtn = (label, action, desc = '', cls = '') => {
                 const btn = document.createElement('button');
                 btn.textContent = label;
                 btn.className = cls || '';
+                btn.dataset.desc = desc || '';
                 btn.addEventListener('click', () => window.handleAction(action));
+                btn.addEventListener('mouseenter', () => {
+                    const d = document.getElementById('choice-desc');
+                    if (d) d.textContent = desc || '';
+                });
+                btn.addEventListener('focus', () => {
+                    const d = document.getElementById('choice-desc');
+                    if (d) d.textContent = desc || '';
+                });
+                btn.addEventListener('mouseleave', () => {
+                    const d = document.getElementById('choice-desc');
+                    if (d) d.textContent = 'Choose an action each month. Hover a choice to see details.';
+                });
                 choicesEl.appendChild(btn);
             };
 
             // Early game choices
             if (month <= 3) {
-                createBtn('Take Side Job (+$600 now)', 'SideJob');
-                createBtn('Pay for Skill Course (-$400 → +$150/mo)', 'Course');
-                createBtn('Build Emergency Fund (-$300 → move to savings)', 'EmergencyFund');
+                createBtn('Take Side Job (+$600 now)', 'SideJob', 'Earn quick cash by doing a short side job — immediate income but no long-term benefit.');
+                createBtn('Pay for Skill Course (-$400 → +$150/mo)', 'Course', 'Invest in a short course: pay now, increase monthly income thereafter.');
+                createBtn('Build Emergency Fund (-$300 → move to savings)', 'EmergencyFund', 'Add to emergency savings to protect against unexpected shortfalls.');
             } else if (month <= 6) {
-                createBtn('Pay Extra on Loan (-$500)', 'PayLoanExtra');
-                createBtn('Buy Dividend Asset (-$500)', 'BuyDividend');
-                createBtn('Sell Some Investments (+cash)', 'SellInvestments');
+                createBtn('Pay Extra on Loan (-$500)', 'PayLoanExtra', 'Reduce your loan balance to save on interest over time.');
+                createBtn('Buy Dividend Asset (-$500)', 'BuyDividend', 'Purchase a dividend-paying asset for long-term passive income.');
+                createBtn('Sell Some Investments (+cash)', 'SellInvestments', 'Liquidate a portion of investments to increase immediate cash.');
             } else if (month <= 12) {
-                createBtn('Take Freelance Contract (+$900 now)', 'SideJobBig');
-                createBtn('Refinance Loan (swap -$1000 now reduce debt by $1100)', 'Refinance');
-                createBtn('Luxury Purchase (-$700, morale)', 'Luxury');
+                createBtn('Take Freelance Contract (+$900 now)', 'SideJobBig', 'Higher-paying contract work — boosts cash but takes time.');
+                createBtn('Refinance Loan (swap -$1000 now reduce debt by $1100)', 'Refinance', 'Pay an upfront fee to reduce your overall loan balance.');
+                createBtn('Luxury Purchase (-$700, morale)', 'Luxury', 'Treat yourself — no financial benefit, but morale (flavor) increases.');
             } else {
-                createBtn('High-Risk Investment (-$700)', 'HighRiskInvest');
-                createBtn('Pay Down Debt Aggressively (-$1000)', 'PayLoanExtraBig');
-                createBtn('Diversify into Bonds (-$500)', 'BuyDividend');
+                createBtn('High-Risk Investment (-$700)', 'HighRiskInvest', 'Risky, high-variance investment — can pay off or lose money.');
+                createBtn('Pay Down Debt Aggressively (-$1000)', 'PayLoanExtraBig', 'Aggressively reduce loan principal to minimize interest costs.');
+                createBtn('Diversify into Bonds (-$500)', 'BuyDividend', 'Add lower-risk assets to balance your portfolio.');
             }
         }
 
@@ -1034,6 +1089,8 @@
                         const bonus = Math.round(300 + Math.random() * 600); // 300-900
                         gameState.balance += bonus;
                         nextMonthMessage += `\nA surprise bonus arrived: +$${bonus}!`;
+                        // show animated popup
+                        try { showSurprise(bonus); } catch (e) { /* ignore */ }
                     }
 
                     // Difficulty scaling: rent increases slightly every 6 months
